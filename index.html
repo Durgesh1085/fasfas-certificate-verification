@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Certificate Verification · FAS FAS Labs</title>
+  <meta name="description" content="Verify certificates issued by FAS FAS Labs." />
+  <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f2f3f6;
+      --card: #ffffff;
+      --text: #232323;
+      --muted: #6b7280;
+      --success: #48ad5f;
+      --danger: #c83d43;
+      --gold: #d4af37;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: var(--text);
+      background: var(--background);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .verification-card {
+      width: min(100%, 430px);
+      overflow: hidden;
+      border-radius: 6px;
+      background: var(--card);
+      box-shadow: 0 7px 18px rgba(20, 29, 43, .16);
+      text-align: center;
+      animation: enter .35s ease-out both;
+    }
+
+    .status-line { height: 6px; background: var(--success); }
+    .verification-card.invalid .status-line { background: var(--danger); }
+
+    .content { padding: 25px 32px 27px; }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      margin-bottom: 11px;
+    }
+
+    .brand img { width: 54px; height: 35px; object-fit: contain; }
+
+    .brand-text { text-align: left; line-height: 1; }
+    .brand-name { display: block; font-family: Arial, sans-serif; font-size: 14px; font-weight: 800; letter-spacing: -.03em; }
+    .brand-subtitle { display: block; margin-top: 4px; color: #92701b; font-family: Arial, sans-serif; font-size: 7px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+
+    h1 {
+      margin: 2px 0 13px;
+      color: var(--success);
+      font-size: 24px;
+      line-height: 1.15;
+    }
+
+    .invalid h1 { color: var(--danger); }
+
+    .message {
+      margin: 0 auto;
+      max-width: 355px;
+      font-size: 14.5px;
+      line-height: 1.28;
+    }
+
+    .message strong { font-weight: 800; }
+
+    .note {
+      margin: 17px auto 0;
+      max-width: 360px;
+      font-size: 14px;
+      line-height: 1.28;
+    }
+
+    .metadata {
+      margin: 18px 0 0;
+      padding-top: 13px;
+      border-top: 1px solid #ececec;
+      color: var(--muted);
+      font-family: Arial, sans-serif;
+      font-size: 10.5px;
+      line-height: 1.55;
+    }
+
+    .metadata strong { color: #3f4650; }
+
+    .loading { color: var(--muted); font-family: Arial, sans-serif; font-size: 14px; }
+
+    @keyframes enter {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 520px) {
+      body { padding: 18px; }
+      .content { padding: 24px 24px 25px; }
+      h1 { font-size: 22px; }
+      .message, .note { font-size: 13.5px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .verification-card { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="verification-card" id="verification-card" aria-live="polite">
+    <div class="status-line"></div>
+    <div class="content">
+      <div class="brand" aria-label="FAS FAS Labs">
+        <img src="/logo.svg" alt="FAS FAS Labs logo" />
+        <span class="brand-text">
+          <span class="brand-name">FAS FAS Labs</span>
+          <span class="brand-subtitle">A Product Based Company</span>
+        </span>
+      </div>
+
+      <div id="result"><p class="loading">Checking certificate record…</p></div>
+    </div>
+  </main>
+
+  <script>
+    const escapeHtml = (value) => String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+    function certificateIdFromUrl() {
+      const parts = location.pathname.split("/").filter(Boolean);
+      const marker = parts.findIndex((part) => part === "certificate");
+      if (marker >= 0 && parts[marker + 1]) return decodeURIComponent(parts[marker + 1]);
+      return new URLSearchParams(location.search).get("id") || "";
+    }
+
+    async function verifyCertificate() {
+      const card = document.getElementById("verification-card");
+      const result = document.getElementById("result");
+      const requestedId = certificateIdFromUrl();
+
+      try {
+        const response = await fetch("/certificates.json", { cache: "no-store" });
+        if (!response.ok) throw new Error("Unable to load certificate registry");
+        const registry = await response.json();
+        const certificate = registry.certificates.find((record) => record.id.toLowerCase() === requestedId.toLowerCase() && record.status === "valid");
+
+        if (!certificate) {
+          card.classList.add("invalid");
+          result.innerHTML = `
+            <h1>Certificate Not Found</h1>
+            <p class="message">No valid certificate record was found for <strong>${escapeHtml(requestedId || "the supplied ID")}</strong>.</p>
+            <p class="note">Please check the QR code or contact FAS FAS Labs.</p>
+          `;
+          return;
+        }
+
+        document.title = `${certificate.name} · Certificate Validated`;
+        result.innerHTML = `
+          <h1>Certificate Validated</h1>
+          <p class="message">This certificate is valid. Congratulations, <strong>${escapeHtml(certificate.name)}</strong>! You have successfully completed the <strong>${escapeHtml(certificate.program)}</strong> at <strong>FAS FAS LABS</strong> from <strong>${escapeHtml(certificate.startDate)}</strong> to <strong>${escapeHtml(certificate.endDate)}</strong>.</p>
+          <p class="note">This internship was focused on <strong>project-based learning</strong> and <strong>task-based evaluation</strong>.</p>
+          <p class="metadata"><strong>Certificate ID:</strong> ${escapeHtml(certificate.id)}<br><strong>Issued by:</strong> ${escapeHtml(certificate.issuedBy)} · ${escapeHtml(certificate.issuerDepartment)}</p>
+        `;
+      } catch (error) {
+        card.classList.add("invalid");
+        result.innerHTML = `
+          <h1>Verification Unavailable</h1>
+          <p class="message">The certificate registry could not be checked right now.</p>
+          <p class="note">Please try again shortly.</p>
+        `;
+      }
+    }
+
+    verifyCertificate();
+  </script>
+</body>
+</html>

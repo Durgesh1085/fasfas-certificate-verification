@@ -1,0 +1,16 @@
+{
+  "certificates": [
+    {
+      "id": "FFL-INT-2026-DV-001",
+      "status": "valid",
+      "name": "Durgesh Verma",
+      "program": "Two-Month Remote (Online) Internship",
+      "startDate": "1 May 2026",
+      "endDate": "30 June 2026",
+      "issuedOn": "30 June 2026",
+      "issuedBy": "FAS FAS LABS",
+      "issuer": "Saurabh Singh",
+      "issuerDepartment": "HR Department"
+    }
+  ]
+}

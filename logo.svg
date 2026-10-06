@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 72" role="img" aria-labelledby="title">
+  <title id="title">FAS FAS Labs logo</title>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8cf71"/>
+      <stop offset="0.52" stop-color="#aa7922"/>
+      <stop offset="1" stop-color="#5c3e07"/>
+    </linearGradient>
+  </defs>
+  <path d="M10 8h100v18H67L25 64H10V39L46 8Z" fill="url(#gold)"/>
+  <path d="M53 46h57v18H10V48l38-40h22L34 46Z" fill="url(#gold)" opacity=".94"/>
+</svg>
